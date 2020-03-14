@@ -1,13 +1,13 @@
-/* eslint-disable react-native/no-inline-styles */
 import React, { Component } from 'react';
 import {
   SafeAreaView,
   StyleSheet,
   ScrollView,
-  TouchableHighlight,
+  Button,
   TextInput,
   View,
   Text,
+  Image,
   TouchableOpacity,
 } from 'react-native';
 import MapView, { PROVIDER_GOOGLE, } from 'react-native-maps';
@@ -16,14 +16,16 @@ import { widthPercentageToDP as wp, heightPercentageToDP as hp, }
 import Geolocation from '@react-native-community/geolocation';
 import MapViewDirections from 'react-native-maps-directions';
 import Icon from 'react-native-vector-icons/AntDesign';
-import Icon1 from 'react-native-vector-icons/AntDesign';
 import Geocoder from 'react-native-geocoding';
 import { GooglePlacesAutocomplete } from 'react-native-google-places-autocomplete';
-import { getPathLength } from 'geolib';
+import RBSheet from "react-native-raw-bottom-sheet";
 import { getDistance, getPreciseDistance } from 'geolib';
+import Vehicle from 'react-native-vector-icons/MaterialCommunityIcons';
+import Modal from 'react-native-modal';
+import GoIcon from 'react-native-vector-icons/Entypo';
+
 
 class App extends Component {
-
   constructor(props) {
     super(props);
     this.state = {
@@ -36,9 +38,12 @@ class App extends Component {
       place: '',
       showsUserLocation: true,
       data: {},
-      distance:null
+      distance: null,
+      Motofare: null,
+      Gofare: null,
+      Autofare: null,
+      check: false,
     };
-
   }
 
   componentDidMount() {
@@ -55,9 +60,8 @@ class App extends Component {
     );
   }
 
-  Getdata = () => {
+  GetLocation = () => {
     Geocoder.init('AIzaSyAGKFNn0Gk9EFj35JTLG5G77RQ3XHD8hH8');
-
     Geocoder.from(this.state.data.description)
       .then(json => {
         var location = json.results[0].geometry.location;
@@ -66,21 +70,42 @@ class App extends Component {
       .catch(error => console.warn(error))
   }
 
-  _getDistance = () => {
+  getRideDistance = () => {
     var dis = getDistance(
       { latitude: this.state.latitude, longitude: this.state.longitude },
       { latitude: this.state.location.lat, longitude: this.state.location.lng }
     );
     //alert(`Distance\n${dis} Meter\nor\n${dis / 1000} KM`);
     this.setState({
-      distance:((dis/1000)*20).toFixed()
+      distance: (dis / 1000).toFixed(2),
+      Motofare: (((dis / 1000) * 20) + 50).toFixed(),
+      Gofare: (((dis / 1000) * 30) + 90).toFixed(),
+      Autofare: (((dis / 1000) * 25) + 70).toFixed(),
     })
   };
 
+  renderItem = (item, index) => (
+    <View>
+      <Button title={`OPEN BOTTOM SHEET-${index}`} onPress={() => this[RBSheet + index].open()} />
+      <RBSheet
+        ref={ref => {
+          this[RBSheet + index] = ref;
+        }}
+      >
+        <YourOwnComponent onPress={() => this[RBSheet + index].close()} />
+      </RBSheet>
+    </View>
+  );
 
+  onPressButton = () => {
+    this.setState({
+      check: !this.state.check,
+    })
+
+  }
 
   render() {
-    console.log(this.state.distance, "hello")
+    //console.log(this.state.distance, "distance")
     return (
       <View style={styles.Container}>
         <View style={styles.map}>
@@ -109,18 +134,19 @@ class App extends Component {
               console.log(this.state.location, 'position')
             }
 
-            <MapViewDirections
+            {<MapViewDirections
               origin={{ "latitude": this.state.latitude, "longitude": this.state.longitude }}
               destination={{ "latitude": this.state.location.lat, "longitude": this.state.location.lng }}
               apikey={'AIzaSyAGKFNn0Gk9EFj35JTLG5G77RQ3XHD8hH8'}
-              strokeWidth={3}
+              strokeWidth={2}
               strokeColor="blue"
 
               query={{
                 key: "travelmode",
                 value: "driving"
               }}
-            />
+            />}
+
           </MapView>}
         </View>
 
@@ -133,8 +159,9 @@ class App extends Component {
           listViewDisplayed={false}    // true/false/undefined
           onPress={(data, details = null) => { // 'details' is provided when fetchDetails = true
             this.setState({ data })
+            this.onPressButton()
           }}
-          //onPress={() => this.Getdata()}
+          //onPress={() => this.onPressButton()}
           debounce={0} // debounce the requests in ms. Set to 0 to remove debounce. By default 0ms.
           query={{
             key: "AIzaSyAGKFNn0Gk9EFj35JTLG5G77RQ3XHD8hH8",
@@ -188,33 +215,118 @@ class App extends Component {
         />
 
         <View style={styles.footer}>
-          <View style={styles.fareContainer}>
-           
-            <TouchableHighlight
-                style={styles.buttonStyle}
-                onPress={() => this._getDistance()}
-                >
-                 <Text style={{fontSize:25}}>See Fare:</Text>
-              </TouchableHighlight>
-              
-              <Text style={{fontSize:25}}>{this.state.distance}</Text>
-          </View>
-                
-          <View style={styles.gobuttonContainer}>
-            <View style={{justifyContent:'center',height:'100%',
-            alignItems:'center',}}>
-            <TouchableOpacity
-              style={styles.gobutton}
-              onPress={() => this.Getdata()}
-              //onPress={() => this._getDistance()}
-              >
-              <Icon name='right' size={35}></Icon>
-              {/* <Text>hello</Text> */}
-            </TouchableOpacity>
-            </View>
-            {/* <Text>button</Text> */}
-          </View>
+
+          <TouchableOpacity
+            style={styles.selectCar}
+            onPress={() => { this.getRideDistance(), this.RBSheet.open() }}
+          //onPress={() => this.RBSheet.open()}
+          >
+            <Text style={{ fontSize: 25 }} >Select Car</Text>
+          </TouchableOpacity>
+
         </View>
+
+        <RBSheet
+          ref={ref => {
+            this.RBSheet = ref;
+          }}
+          height={hp('30%')}
+          duration={250}
+          customStyles={{
+            container: {
+              justifyContent: 'flex-start',
+              alignItems: "center"
+            }
+          }}
+        >
+          <View style={{ backgroundColor: 'white', height: hp('100%'), width: wp('100%') }}>
+            <TouchableOpacity onPress={()=>alert("Ride Booked Succedssfully \n We are searching for driver near you")}>
+              <View style={styles.Vehicles}>
+
+                <View style={{
+                  marginLeft: '3%', width: wp('40%'),
+                  flexDirection: 'row', alignItems: 'center'
+                }}>
+                  <Vehicle name='car-sports' size={35} />
+                  <GoIcon name='dots-three-horizontal' size={20} />
+                  <Text>{this.state.distance} km</Text>
+                  <GoIcon name='dots-three-horizontal' size={20} />
+                  <Vehicle name='car-sports' size={35}></Vehicle>
+                </View>
+
+                <Text style={{ fontSize: hp('3%'), width: wp('25%'),}}>Uber Go</Text>
+                <Text style={{ fontSize: hp('3%'), width: wp('35%'),}}>Fare:{this.state.Gofare}</Text>
+              </View>
+            </TouchableOpacity>
+
+            <TouchableOpacity onPress={()=>alert("Ride Booked Successfully \n We are searching for driver near you")}>
+              <View style={styles.Vehicles}>
+                <View style={{
+                  marginLeft: '3%', width: wp('40%'), 
+                  flexDirection: 'row', alignItems: 'center'
+                }}>
+                  <Image style={{ height: 30, width: 30, }}
+                    source={{ uri: 'https://static.thenounproject.com/png/993-200.png' }} />
+                  <GoIcon name='dots-three-horizontal' size={20} />
+                  <Text>{this.state.distance} km</Text>
+                  <GoIcon name='dots-three-horizontal' size={20} />
+                  <Image style={{ height: 30, width: 30, }}
+                    source={{ uri: 'https://static.thenounproject.com/png/993-200.png' }} />
+                </View>
+
+                <Text style={{ fontSize: hp('3%'), width: wp('25%') }}>Uber Auto</Text>
+                <Text style={{ fontSize: hp('3%'), width: wp('35%') }}>Fare:{this.state.Autofare}</Text>
+              </View>
+            </TouchableOpacity>
+
+            <TouchableOpacity onPress={()=>alert("Ride Booked Successfully \n We are searching for driver near you")}>
+              <View style={styles.Vehicles}>
+                <View style={{
+                  marginLeft: '3%', width: wp('40%'), 
+                  flexDirection: 'row', alignItems: 'center'
+                }}>
+                  <Vehicle name='motorbike' size={35}></Vehicle>
+                  <GoIcon name='dots-three-horizontal' size={20} />
+                  <Text>{this.state.distance} km</Text>
+                  <GoIcon name='dots-three-horizontal' size={20} />
+                  <Vehicle name='motorbike' size={35}></Vehicle>
+                </View>
+                <Text style={{ fontSize: hp('3%'), width: wp('25%') }}>Uber Moto</Text>
+                <Text style={{ fontSize: hp('3%'), width: wp('35%') }}>Fare:{this.state.Motofare}</Text>
+              </View>
+            </TouchableOpacity>
+          </View>
+        </RBSheet>
+
+        <Modal
+          testID={'modal'}
+          isVisible={this.state.check}
+          animationInTiming={1000}
+          animationOutTiming={1000}
+          backdropTransitionInTiming={800}
+          backdropTransitionOutTiming={800}>
+          <View style={styles.modalContainer}>
+            <View style={{ margin: hp('2%') }}>
+              <Text style={{ fontSize: hp('3.5%'), }}>Pickup: </Text>
+              <Text style={{ fontSize: hp('2.8%'), color: 'grey', marginBottom: hp('1%') }}>
+                Your location</Text>
+              <GoIcon style={{ marginBottom: hp('1%') }} name='dots-three-vertical' size={30}></GoIcon>
+              <Text style={{ fontSize: hp('3.5%') }}>Dropoff:  </Text>
+              <Text style={{ fontSize: hp('2.8%'), color: 'grey', marginBottom: hp('1%') }}>
+                {this.state.data.description}</Text>
+
+              <TouchableOpacity
+                style={{
+                  height: hp('5%'), width: wp('83%'),
+                  backgroundColor: 'blue', justifyContent: 'center', alignItems: 'center'
+                }}
+                onPress={() => { this.onPressButton(), this.GetLocation() }}>
+                <Text style={{ color: 'white', fontSize: hp('3.5%') }}>Confirm</Text>
+              </TouchableOpacity>
+            </View>
+          </View>
+        </Modal>
+
       </View>
     );
   }
@@ -277,43 +389,62 @@ const styles = StyleSheet.create({
   },
 
   footer: {
-    backgroundColor:'white',
+    backgroundColor: 'white',
     height: hp('10%'),
     flexDirection: "row",
     justifyContent: 'center',
-    alignItems:'center'
+    alignItems: 'center'
   },
 
-  fareContainer: {
-    width: wp('78%'),
+  selectCar: {
+    backgroundColor: 'white',
     height: hp('8%'),
-    //backgroundColor:'cyan',
-    flexDirection:'row',
-    alignItems:"center"
-  },
-
-  gobuttonContainer: {
-    width: wp('18%'),
-    //backgroundColor:'pink',
-    height: hp('8%'),
-    alignItems: 'center',
-    
-  },
-
-  gobutton:
-  {
-    height: hp('5%'),
-    width: wp('8.2%'),
+    width: wp('90%'),
     justifyContent: 'center',
-    backgroundColor:'white',
-    borderRadius:20,
-    alignItems:'center',
+    alignItems: 'center',
     shadowColor: '#000',
     shadowOffset: { width: 0, height: 2 },
     shadowOpacity: 0.8,
     shadowRadius: 2,
     elevation: 4,
     borderColor: '#ddd',
+    marginBottom: hp('1%'),
+    alignItems: 'center',
+    flexDirection: 'row',
+    borderRadius: 10,
+    borderColor: 'grey',
+    borderWidth: 1,
+  },
+
+  Vehicles: {
+    backgroundColor: 'white',
+    height: hp('9.1%'),
+    width: wp('100%'),
+    shadowColor: '#000',
+    shadowOffset: { width: 0, height: 2 },
+    shadowOpacity: 0.8,
+    shadowRadius: 2,
+    elevation: 4,
+    borderColor: '#ddd',
+    marginBottom: hp('1%'),
+    alignItems: 'center',
+    flexDirection: 'row',
+  },
+
+  modalContainer: {
+    backgroundColor: 'white',
+    height: hp('35%'),
+    width: wp('90%'),
+    shadowColor: '#000',
+    shadowOffset: { width: 0, height: 2 },
+    shadowOpacity: 0.8,
+    //shadowRadius: 2,
+    elevation: 4,
+    borderColor: '#ddd',
+    marginBottom: hp('1%'),
+    alignItems: 'center',
+    flexDirection: 'row',
+    //borderRadius: 10,
   }
 });
 
