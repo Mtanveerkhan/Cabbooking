@@ -15,7 +15,6 @@ import { widthPercentageToDP as wp, heightPercentageToDP as hp, }
   from 'react-native-responsive-screen';
 import Geolocation from '@react-native-community/geolocation';
 import MapViewDirections from 'react-native-maps-directions';
-import Icon from 'react-native-vector-icons/AntDesign';
 import Geocoder from 'react-native-geocoding';
 import { GooglePlacesAutocomplete } from 'react-native-google-places-autocomplete';
 import RBSheet from "react-native-raw-bottom-sheet";
@@ -23,7 +22,9 @@ import { getDistance, getPreciseDistance } from 'geolib';
 import Vehicle from 'react-native-vector-icons/MaterialCommunityIcons';
 import Modal from 'react-native-modal';
 import GoIcon from 'react-native-vector-icons/Entypo';
+import Icon from 'react-native-vector-icons/AntDesign';
 
+// const { width, height } = Dimensions.get('window');
 
 class App extends Component {
   constructor(props) {
@@ -105,10 +106,21 @@ class App extends Component {
   }
 
   render() {
-    //console.log(this.state.distance, "distance")
+    console.log(this.state.distance, "distance")
     return (
       <View style={styles.Container}>
+        
+          
         <View style={styles.map}>
+         <TouchableOpacity style={{
+            margin: 12,
+            width: wp('10%'),
+            
+          }}
+            onPress={() => this.props.navigation.openDrawer()}  >
+            <Icon name='menu-unfold' size={30} />
+          </TouchableOpacity>
+
           {this.state.latitude && this.state.longitude && <MapView style={styles.map}
             provider={PROVIDER_GOOGLE}
             showsUserLocation={this.state.showsUserLocation}
@@ -170,13 +182,13 @@ class App extends Component {
 
           styles={{
             container: {
-              marginTop: hp('1.2%'),
+              marginTop: hp('1%'),
             },
             textInputContainer: {
-              width: wp('78%'),
+              width: wp('80%'),
               height: hp('6%'),
               //backgroundColor: '#c6c0bf',
-              marginLeft: hp('2%'),
+              marginLeft: hp('8%'),
               borderRadius: 10
             },
             description: {
@@ -240,7 +252,7 @@ class App extends Component {
           }}
         >
           <View style={{ backgroundColor: 'white', height: hp('100%'), width: wp('100%') }}>
-            <TouchableOpacity onPress={()=>alert("Ride Booked Succedssfully \n We are searching for driver near you")}>
+            <TouchableOpacity onPress={() => alert("Ride Booked Succedssfully \n We are searching for driver near you")}>
               <View style={styles.Vehicles}>
 
                 <View style={{
@@ -254,15 +266,15 @@ class App extends Component {
                   <Vehicle name='car-sports' size={35}></Vehicle>
                 </View>
 
-                <Text style={{ fontSize: hp('3%'), width: wp('25%'),}}>Uber Go</Text>
-                <Text style={{ fontSize: hp('3%'), width: wp('35%'),}}>Fare:{this.state.Gofare}</Text>
+                <Text style={{ fontSize: hp('3%'), width: wp('25%'), }}>Uber Go</Text>
+                <Text style={{ fontSize: hp('3%'), width: wp('35%'), }}>Fare:{this.state.Gofare}</Text>
               </View>
             </TouchableOpacity>
 
-            <TouchableOpacity onPress={()=>alert("Ride Booked Successfully \n We are searching for driver near you")}>
+            <TouchableOpacity onPress={() => alert("Ride Booked Successfully \n We are searching for driver near you")}>
               <View style={styles.Vehicles}>
                 <View style={{
-                  marginLeft: '3%', width: wp('40%'), 
+                  marginLeft: '3%', width: wp('40%'),
                   flexDirection: 'row', alignItems: 'center'
                 }}>
                   <Image style={{ height: 30, width: 30, }}
@@ -279,10 +291,10 @@ class App extends Component {
               </View>
             </TouchableOpacity>
 
-            <TouchableOpacity onPress={()=>alert("Ride Booked Successfully \n We are searching for driver near you")}>
+            <TouchableOpacity onPress={() => alert("Ride Booked Successfully \n We are searching for driver near you")}>
               <View style={styles.Vehicles}>
                 <View style={{
-                  marginLeft: '3%', width: wp('40%'), 
+                  marginLeft: '3%', width: wp('40%'),
                   flexDirection: 'row', alignItems: 'center'
                 }}>
                   <Vehicle name='motorbike' size={35}></Vehicle>
